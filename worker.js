@@ -81,9 +81,9 @@ async function handleRequest(request) {
 async function returnWithGit(what) {
     let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`
     const r = await fetch(theLink, {
-        // cf: {
-        //     cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
-        // },
+        cf: {
+            cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
+        },
     });
     theMIME = 'text/html'
     if (what.endsWith('js')) {
@@ -94,7 +94,7 @@ async function returnWithGit(what) {
     return new Response(r.body, {
         headers: {
             'Content-Type': theMIME + '; charset=utf-8',
-            // 'Cache-Control': 'max-age=6912000'
+            'Cache-Control': 'max-age=6912000'
         }
     });
 }
@@ -179,8 +179,8 @@ function handleError(error) {
     })
 }
 
-function buildNotifyBody(tokens_array = [], title = `Hey There \u{1f44b}`, body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available\nat you Registered Pin Code", visit_action = false) {
-    console.log(tokens_array)
+function buildNotifyBody(tokens_array = [], title = `Hey There \u{1f44b}`, body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available at you Registered Pin Code", visit_action = false) {
+    // console.log(tokens_array)
     let theBody = {
         data: {
             notification: {
@@ -217,16 +217,16 @@ async function sendNotifications() {
     for (const [pinCode, tokens] of Object.entries(pinCodes)) {
         console.log(pinCode, tokens);
 
-        let todaysDate = new Date().toJSON().slice(0, 10).split('-').reverse().join('-')
-        let apiURL = `https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`
+        let todaysDate = (new Date((new Date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })).toJSON()).slice(0, 10).split('-').reverse().join('-')
+        let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`
 
         let totalSlotsCount = 0
         let msgBody = `Hurry Up; Book Fast\n`;
 
         let response = await (await fetch(apiURL)).text()
-        console.log(response)
-        if (response.body.startsWith('{')) {
-            response = JSON.parse(response.body)
+        console.log(apiURL, response)
+        if (response.startsWith('{')) {
+            response = JSON.parse(response)
             response.centers.forEach(center => {
                 let centerSessionsCount = 0
                 center.sessions.forEach(session => {

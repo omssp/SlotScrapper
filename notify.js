@@ -10,7 +10,7 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 let clientToken;
-let origin = 'https://ss.omssp.workers.dev'
+let origin = ''
 
 $(document).ready(() => {
 
