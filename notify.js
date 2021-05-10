@@ -10,6 +10,7 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 let clientToken;
+let origin = 'https://ss.omssp.workers.dev'
 
 $(document).ready(() => {
 
@@ -30,9 +31,7 @@ $(document).ready(() => {
 
 $('#enableNotify').on('click', askNotificationPermission);
 
-$('#regbtn').on('click', () => {
-    // showNotification('asdsad')
-});
+$('#regbtn').on('click', fetchSubscription);
 
 function checkNotificationPromise() {
     try {
@@ -58,7 +57,7 @@ function askNotificationPermission() {
                 $('#regbtn').removeClass('d-none');
                 clientToken = token;
                 console.log("token is : " + token);
-                stopPreloader();
+                fetchSubscription();
             })
             .catch(function(err) {
                 $('#enableNotify').removeClass('d-none');
@@ -99,20 +98,81 @@ function stopPreloader() {
     $('.form-body').removeClass('loading-blurred');
 }
 
-/*
-function subscribeTokenToTopic(token, topic) {
-  fetch('https://myserver.com/'+token+'/rel/topics/'+topic, {
-    method: 'POST',
-    headers: new Headers({
-      'Authorization': 'Bearer '+ oauthToken
-    })
-  }).then(response => {
-    if (response.status < 200 || response.status >= 400) {
-      throw 'Error subscribing to topic: '+response.status + ' - ' + response.text();
-    }
-    console.log('Subscribed to "'+topic+'"');
-  }).catch(error => {
-    console.error(error);
-  })
+function fetchSubscription() {
+    $.when(showPreloader()).then(() => {
+
+        let theURL = `${origin}/@action`
+        let days = 1
+        switch ($('input[name="sub"]:checked').attr('id')) {
+            case "week":
+                days = 7;
+                break;
+            case "month":
+                days = 30;
+                break;
+        }
+        $.ajax({
+            method: "GET",
+            url: theURL,
+            data: {
+                clientToken,
+                topic: $("div.col-12.mt-1 > input").val(),
+                days
+            },
+            async: false,
+            success: function(response) {
+                console.log(response)
+                let radioId = 'day'
+
+                switch (response.subscribed) {
+                    case "new":
+                    case "old":
+                        if (response.found.days > 7) {
+                            radioId = 'month'
+                        } else if (response.found.days > 1) {
+                            radioId = 'week'
+                        }
+                        $('input[name="sub"]').attr('disabled', true);
+                        $("div.col-12.mt-1 > input").attr('disabled', true);
+                        $("div.col-12.mt-1 > input").val(response.found.topic);
+                        $('#regbtn').html('Unregister');
+                        $('#regbtn').off('click').on('click', unSub)
+                        break;
+                }
+                $(`#${radioId}`).attr('checked', true);
+                stopPreloader();
+            },
+            error: function(e) {
+                console.log(e)
+                alert(e.statusText)
+            }
+        });
+    });
 }
-*/
+
+
+function unSub() {
+    $.when(showPreloader()).then(() => {
+        let theURL = `${origin}/@remove`
+        $.ajax({
+            method: "GET",
+            url: theURL,
+            data: {
+                clientToken
+            },
+            async: false,
+            success: function(response) {
+                console.log(response)
+                $('input[name="sub"]').removeAttr('disabled');
+                $("div.col-12.mt-1 > input").removeAttr('disabled');
+                $('#regbtn').html('Register');
+                $('#regbtn').off('click').on('click', fetchSubscription)
+                stopPreloader();
+            },
+            error: function(e) {
+                console.log(e)
+                alert(e.statusText)
+            }
+        });
+    });
+}

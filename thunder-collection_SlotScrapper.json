@@ -1,0 +1,40 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "SlotScrapper",
+    "dateExported": "2021-05-10T16:34:51.890Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [{
+        "containerId": "",
+        "sortNum": 10000,
+        "headers": [{
+                "name": "Accept",
+                "value": "*/*"
+            },
+            {
+                "name": "User-Agent",
+                "value": "Thunder Client (https://www.thunderclient.io)"
+            },
+            {
+                "name": "Authorization",
+                "value": "key=AAAA8dFXWdE:APA91bG9JLLAfunOANuyJEHf8Ak5rBUZ5EAN5fpxt_klXdj7lYdd0CFfnsmEUyK3TjEMZjqB3NduwCftrLqJJCprAG0Sw5kTPN--VFBF_KoB0R3xppFCRiaaI7YCVbrbFKKMpr2n0CKv"
+            },
+            {
+                "name": "Content-Type",
+                "value": "application/json"
+            }
+        ],
+        "colId": "62aebd80-21a2-4f42-9f40-18e828d75a28",
+        "name": "https://fcm.googleapis.com/fcm/send",
+        "url": "https://fcm.googleapis.com/fcm/send",
+        "method": "POST",
+        "modified": "2021-05-10T13:45:20.284Z",
+        "created": "2021-05-10T10:46:06.823Z",
+        "_id": "54734e0b-b293-40bd-ac05-22d656a62b9f",
+        "body": {
+            "type": "json",
+            "raw": "{\r\n    \"data\": {\r\n        \"notification\": {\r\n            \"title\": \"Message 123213 asdasd\",\r\n            \"body\": \"This is an FCM Message\",\r\n            \"icon\": \"http://vomkar.droppages.com/icon.png\",\r\n            \"vibrate\": [200, 100, 200],\r\n            \"actions\": [\r\n                {\r\n                  \"action\": \"visit\",\r\n                  \"title\": \"Book Slot\"\r\n                  \"data\": \"event.notification\"\r\n                },\r\n                {\r\n                  \"action\": \"dismiss\",\r\n                  \"title\": \"Okay\"\r\n                }\r\n            ]\r\n        },\r\n        \"url\": \"https://selfregistration.cowin.gov.in/\",\r\n    },\r\n    \"registration_ids\": [\"dwKoz9oRvoSspgstbbhCyu:APA91bGx0IgDiahRkO6su-6dZoQE5fGL18YNI19bijRxo2rqcKudkZYiL-jzmMI7j1qEhgEdB0PcySp4FTym7UOmT5cuFqoji1xSTc68aKGftkbUg7m5LTXEt3IdY-uEhOBMsrPdJy-G\"]\r\n}"
+        },
+        "tests": []
+    }]
+}
