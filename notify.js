@@ -10,9 +10,11 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 let clientToken;
-let origin = ''
+let origin = '';
+let first_notify;
 
 $(document).ready(() => {
+    first_notify = alertNotify('Please Allow the Notifications', 'info', 'topCenter', 25000);
 
     askNotificationPermission();
 
@@ -62,16 +64,20 @@ function askNotificationPermission() {
             .catch(function(err) {
                 $('#enableNotify').removeClass('d-none');
                 $('#regbtn').addClass('d-none');
-                if (Notification.permission === 'denied')
-                    alert("Notifications blocked. Please enable them in your browser.");
+                if (Notification.permission === 'denied') {
+                    // alert("Notifications blocked. Please enable them in your browser.");
+                    alertNotify('Notifications blocked. Please enable them in your browser.', 'error');
+                }
                 console.log("Unable to get permission to notify.", err);
+                alertNotify(err.message, 'error', 'bottomCenter');
                 stopPreloader();
             });
     }
 
     // Let's check if the browser supports notifications
     if (!('Notification' in window)) {
-        alert("This browser does not support notifications.");
+        // alert("This browser does not support notifications.");
+        alertNotify('This browser does not support notifications.', 'warning');
     } else {
         if (checkNotificationPromise()) {
             Notification.requestPermission()
@@ -93,7 +99,8 @@ function showPreloader() {
 }
 
 function stopPreloader() {
-
+    if (first_notify)
+        first_notify.close();
     $('.preloader-background').addClass('d-none');
     $('.form-body').removeClass('loading-blurred');
 }
@@ -123,9 +130,10 @@ function fetchSubscription() {
             success: function(response) {
                 console.log(response)
                 let radioId = 'day'
-
+                let message = `Welcome back! You have already Registered and are receiving the Notifications Updates`
                 switch (response.subscribed) {
                     case "new":
+                        message = `Congratulations! You have Registered and will be receive the Notifications Updates`
                     case "old":
                         if (response.found.days > 7) {
                             radioId = 'month'
@@ -136,15 +144,17 @@ function fetchSubscription() {
                         $("div.col-12.mt-1 > input").attr('disabled', true);
                         $("div.col-12.mt-1 > input").val(response.found.topic);
                         $('#regbtn').html('Unregister');
-                        $('#regbtn').off('click').on('click', unSub)
+                        $('#regbtn').off('click').on('click', unSub);
+                        alertNotify(message, 'success');
                         break;
                 }
                 $(`#${radioId}`).attr('checked', true);
                 stopPreloader();
             },
             error: function(e) {
-                console.log(e)
-                alert(e.statusText)
+                console.log(e);
+                // alert(e.statusText)
+                alertNotify(`${e.status} : ${e.statusText}`, 'error', 'bottomCenter');
             }
         });
     });
@@ -168,11 +178,67 @@ function unSub() {
                 $('#regbtn').html('Register');
                 $('#regbtn').off('click').on('click', fetchSubscription)
                 stopPreloader();
+                alertNotify(`You have been Unregistered`, 'warning', 'bottomCenter');
             },
             error: function(e) {
-                console.log(e)
-                alert(e.statusText)
+                console.log(e);
+                // alert(e.statusText)
+                alertNotify(`${e.status} : ${e.statusText}`, 'error', 'bottomCenter');
             }
         });
     });
+}
+
+function alertNotify(text, type = 'info', layout = 'topCenter', timeout = 5000) {
+    return (new Noty({
+        text,
+        theme: 'sunset',
+        type,
+        timeout,
+        layout,
+        // animation: {
+        //     open: function(promise) {
+        //         var n = this;
+        //         Velocity(n.barDom, {
+        //             left: 450,
+        //             scaleY: 2
+        //         }, {
+        //             duration: 0
+        //         });
+        //         Velocity(n.barDom, {
+        //             left: 0,
+        //             scaleY: 1
+        //         }, {
+        //             easing: [8, 8],
+        //             complete: function() {
+        //                 promise(function(resolve) {
+        //                     resolve();
+        //                 })
+        //             }
+        //         });
+        //     },
+        //     close: function(promise) {
+        //         var n = this;
+        //         Velocity(n.barDom, {
+        //             left: '+=-50'
+        //         }, {
+        //             easing: [8, 8, 2],
+        //             duration: 350
+        //         });
+        //         Velocity(n.barDom, {
+        //             left: 450,
+        //             scaleY: .2,
+        //             height: 0,
+        //             margin: 0
+        //         }, {
+        //             easing: [8, 8],
+        //             complete: function() {
+        //                 promise(function(resolve) {
+        //                     resolve();
+        //                 })
+        //             }
+        //         });
+        //     }
+        // }
+    }).show());
 }

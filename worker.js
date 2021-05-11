@@ -2,12 +2,14 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const NotifyOptions = {
-    'method': 'POST',
-    'url': 'https://fcm.googleapis.com/fcm/send',
-    'headers': {
+    method: 'POST',
+    url: 'https://fcm.googleapis.com/fcm/send',
+    headers: {
         'Authorization': 'key=AAAA8dFXWdE:APA91bG9JLLAfunOANuyJEHf8Ak5rBUZ5EAN5fpxt_klXdj7lYdd0CFfnsmEUyK3TjEMZjqB3NduwCftrLqJJCprAG0Sw5kTPN--VFBF_KoB0R3xppFCRiaaI7YCVbrbFKKMpr2n0CKv',
         'Content-Type': 'application/json'
     },
+    renotify: true,
+    tag: 'newSlotNotify',
     body: {}
 };
 
@@ -197,8 +199,10 @@ function buildNotifyBody(tokens_array = [], title = `Hey There \u{1f44b}`, body 
         },
         registration_ids: tokens_array
     };
-    if (visit_action)
-        theBody.data.notification.actions.shift({ action: "visit", title: "Book Slot" });
+    if (visit_action) {
+        theBody.data.notification.actions.push({ action: "visit", title: "Book Slot" });
+        theBody.data.notification.actions = theBody.data.notification.actions.reverse()
+    }
 
     return theBody
 }
@@ -221,10 +225,10 @@ async function sendNotifications() {
         let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`
 
         let totalSlotsCount = 0
-        let msgBody = `Hurry Up; Book Fast\n`;
+        let msgBody = `Hurry Up; Book Fast\n\n`;
 
         let response = await (await fetch(apiURL)).text()
-        console.log(apiURL, response)
+            // console.log(apiURL, response)
         if (response.startsWith('{')) {
             response = JSON.parse(response)
             response.centers.forEach(center => {
@@ -234,18 +238,36 @@ async function sendNotifications() {
                     totalSlotsCount += count ? count : 0
                     centerSessionsCount += count ? count : 0
                 });
-                if (centerSessionsCount > 0) {
-                    msgBody += `${centerSessionsCount} slots at ${center.address}\n`
+                if (centerSessionsCount >= 0) {
+                    msgBody += `${centerSessionsCount} \u{2022} ${center.address}\n`
                 }
             });
         }
-        msgBody += `\nTake Care \u{e056}`
-
-        if (totalSlotsCount > 0) {
-            let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`
+        let currMin = (new Date()).getMinutes()
+        if (
+            totalSlotsCount > 0 ||
+            (currMin == 49 && !response.length) ||
+            (currMin == 6 && !response.length) ||
+            (currMin == 35 && !response.length) ||
+            (currMin == 20 && !response.length)
+        ) {
             let options = NotifyOptions
+            let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`
+            msgBody += `\nTake Care`
+            if (!totalSlotsCount) {
+                title = `Summary of slots available at ${pinCode} \u{1f614}`
+                msgBody = msgBody.substr(21)
+                msgBody += ' \u{1f614}'
+                options['renotify'] = false
+                options['tag'] = 'noSlotInfo'
+
+            } else {
+                msgBody += ' \u{1f60a}'
+            }
             options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))
             notifyResponses.push(await fetch(options.url, options))
+        } else {
+            notifyResponses.push(`${apiURL} : ${response.length}`)
         }
     }
 
