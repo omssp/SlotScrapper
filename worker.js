@@ -8,8 +8,6 @@ const NotifyOptions = {
         'Authorization': 'key=AAAA8dFXWdE:APA91bG9JLLAfunOANuyJEHf8Ak5rBUZ5EAN5fpxt_klXdj7lYdd0CFfnsmEUyK3TjEMZjqB3NduwCftrLqJJCprAG0Sw5kTPN--VFBF_KoB0R3xppFCRiaaI7YCVbrbFKKMpr2n0CKv',
         'Content-Type': 'application/json'
     },
-    renotify: true,
-    tag: 'newSlotNotify',
     body: {}
 };
 
@@ -46,6 +44,11 @@ async function handleRequest(request) {
     } else if (pathname.startsWith('/@remove') && token) {
         return unSub(token)
     } else if (pathname.startsWith('/@subrs') && topic === "password") {
+        if (days === 'purge') {
+            await saveToStorage(JSON.stringify([]))
+        } else if (days === 'expired') {
+            //todo :function that will delete expired entries
+        }
         return new Response(await getFromStorage(), {
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -181,7 +184,15 @@ function handleError(error) {
     })
 }
 
-function buildNotifyBody(tokens_array = [], title = `Hey There \u{1f44b}`, body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available at you Registered Pin Code", visit_action = false) {
+function buildNotifyBody(
+    tokens_array = [],
+    title = `Hey There \u{1f44b}`,
+    body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available at you Registered Pin Code",
+    visit_action = false,
+    tag = 'newSlotNotify',
+    renotify = true,
+    priority = 0
+) {
     // console.log(tokens_array)
     let theBody = {
         data: {
@@ -190,6 +201,8 @@ function buildNotifyBody(tokens_array = [], title = `Hey There \u{1f44b}`, body 
                 body,
                 icon: "http://vomkar.droppages.com/icon.png",
                 vibrate: [200, 100, 200],
+                renotify,
+                tag,
                 actions: [{
                     action: "dismiss",
                     title: "Okay"
@@ -221,7 +234,8 @@ async function sendNotifications() {
     for (const [pinCode, tokens] of Object.entries(pinCodes)) {
         console.log(pinCode, tokens);
 
-        let todaysDate = (new Date((new Date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" })).toJSON()).slice(0, 10).split('-').reverse().join('-')
+        let dateObj = new Date((new Date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" }));
+        let todaysDate = dateObj.toJSON().slice(0, 10).split('-').reverse().join('-')
         let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`
 
         let totalSlotsCount = 0
@@ -233,13 +247,26 @@ async function sendNotifications() {
             response = JSON.parse(response)
             response.centers.forEach(center => {
                 let centerSessionsCount = 0
+                let ageWise = {}
                 center.sessions.forEach(session => {
                     let count = parseInt(session.available_capacity)
-                    totalSlotsCount += count ? count : 0
-                    centerSessionsCount += count ? count : 0
+                    if (count) {
+                        totalSlotsCount += count
+                        centerSessionsCount += count
+                    }
+                    if (session.min_age_limit in ageWise) {
+                        ageWise[session.min_age_limit] += count
+                    } else {
+                        ageWise[session.min_age_limit] = count
+                    }
+
                 });
                 if (centerSessionsCount >= 0) {
-                    msgBody += `${centerSessionsCount} \u{2022} ${center.address}\n`
+                    let midStr = ''
+                    for (const [age, count] of Object.entries(ageWise)) {
+                        midStr += `${count}(${age}Y) `
+                    }
+                    msgBody += `${midStr.length ? midStr : (centerSessionsCount + ' ')}\u{2022} ${center.address}\n`
                 }
             });
         }
@@ -258,13 +285,12 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`
                 msgBody = msgBody.substr(21)
                 msgBody += ' \u{1f614}'
-                options['renotify'] = false
-                options['tag'] = 'noSlotInfo'
-
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2))
             } else {
                 msgBody += ' \u{1f60a}'
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))
             }
-            options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))
+            // console.log(JSON.stringify(options))
             notifyResponses.push(await fetch(options.url, options))
         } else {
             notifyResponses.push(`${apiURL} : ${response.length}`)
