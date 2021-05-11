@@ -59,7 +59,7 @@ function askNotificationPermission() {
                 $('#regbtn').removeClass('d-none');
                 clientToken = token;
                 console.log("token is : " + token);
-                fetchSubscription();
+                fetchSubscription(false);
             })
             .catch(function(err) {
                 $('#enableNotify').removeClass('d-none');
@@ -105,7 +105,22 @@ function stopPreloader() {
     $('.form-body').removeClass('loading-blurred');
 }
 
-function fetchSubscription() {
+function fetchSubscription(force_validation = true) {
+    let topic = parseInt($("div.col-12.mt-1 > input").val());
+    let consentGiven = $('#invalidCheck').is(":checked")
+    if (force_validation) {
+        let flag = false
+        if (!consentGiven) {
+            alertNotify(`Please confirm to receive Notification`, 'warning', 'topCenter');
+            flag = true
+        }
+        if (!topic || topic < 100000 || topic > 999999) {
+            alertNotify(`Please enter a valid Pin Code`, 'warning', 'topCenter');
+            flag = true
+        }
+        if (flag)
+            return
+    }
     $.when(showPreloader()).then(() => {
 
         let theURL = `${origin}/@action`
@@ -123,7 +138,7 @@ function fetchSubscription() {
             url: theURL,
             data: {
                 clientToken,
-                topic: $("div.col-12.mt-1 > input").val(),
+                topic,
                 days
             },
             async: false,

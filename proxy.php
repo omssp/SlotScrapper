@@ -10,7 +10,7 @@ function proxify($url)
     $content = file_get_contents($url);
     while (!$content) {
         $content = file_get_contents($url);
-        if (++$fail_counter > 7) {
+        if (++$fail_counter > 3) {
             break;
         }
     }

@@ -106,6 +106,7 @@ async function returnWithGit(what) {
 
 async function subscribeORCheck(token, topic, days) {
     days = parseInt(days) ? days : 1
+    topic = parseInt(topic)
 
     let data = JSON.parse(await getFromStorage())
     data = data ? data : []
@@ -113,7 +114,8 @@ async function subscribeORCheck(token, topic, days) {
     let body = { subscribed: 'old' }
     body.found = data.find(o => o.token == token)
 
-    if (!body.found) {
+    if (!body.found && topic && topic > 100000 && topic < 999999) {
+
         let subr = { token, topic, days, datets: (new Date()) }
         data.push(subr)
         await saveToStorage(JSON.stringify(data))
@@ -123,6 +125,8 @@ async function subscribeORCheck(token, topic, days) {
         let options = NotifyOptions
         options.body = JSON.stringify(buildNotifyBody([token]))
         await fetch(options.url, options)
+    } else {
+        body.subscribed = false
     }
     return new Response(JSON.stringify(body), {
         headers: {
@@ -191,7 +195,8 @@ function buildNotifyBody(
     visit_action = false,
     tag = 'newSlotNotify',
     renotify = true,
-    priority = 0
+    priority = 0,
+    badge = "https://vomkar.droppages.com/new-badge.png"
 ) {
     // console.log(tokens_array)
     let theBody = {
@@ -200,6 +205,7 @@ function buildNotifyBody(
                 title,
                 body,
                 icon: "http://vomkar.droppages.com/icon.png",
+                badge,
                 vibrate: [200, 100, 200],
                 renotify,
                 tag,
@@ -245,6 +251,7 @@ async function sendNotifications() {
             // console.log(apiURL, response)
         if (response.startsWith('{')) {
             response = JSON.parse(response)
+
             response.centers.forEach(center => {
                 let centerSessionsCount = 0
                 let ageWise = {}
@@ -271,12 +278,10 @@ async function sendNotifications() {
             });
         }
         let currMin = (new Date()).getMinutes()
+        console.log(msgBody)
         if (
-            totalSlotsCount > 0 ||
-            (currMin == 49 && !response.length) ||
-            (currMin == 6 && !response.length) ||
-            (currMin == 35 && !response.length) ||
-            (currMin == 20 && !response.length)
+            (totalSlotsCount >= 0 && msgBody.length > 25) ||
+            ((currMin == 49 || currMin == 6 || currMin == 35 || currMin == 20) && response.length == undefined)
         ) {
             let options = NotifyOptions
             let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`
@@ -285,7 +290,7 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`
                 msgBody = msgBody.substr(21)
                 msgBody += ' \u{1f614}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2))
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2, "https://vomkar.droppages.com/old-badge.png"))
             } else {
                 msgBody += ' \u{1f60a}'
                 options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))
@@ -293,7 +298,7 @@ async function sendNotifications() {
             // console.log(JSON.stringify(options))
             notifyResponses.push(await fetch(options.url, options))
         } else {
-            notifyResponses.push(`${apiURL} : ${response.length}`)
+            notifyResponses.push(`${apiURL} : ${response.length} : ${response.centers?.length}`)
         }
     }
 
