@@ -145,10 +145,10 @@ function fetchSubscription(force_validation = true) {
             success: function(response) {
                 console.log(response)
                 let radioId = 'day'
-                let message = `Welcome back! You have already Registered and are receiving the Notifications Updates`
+                let message = `Welcome back!<br/> You have already Registered and are receiving the Notifications Updates`
                 switch (response.subscribed) {
                     case "new":
-                        message = `Congratulations! You have Registered and will be receive the Notifications Updates`
+                        message = `Congratulations!<br/> You have Registered and will be receive the Notifications Updates`
                     case "old":
                         if (response.found.days > 7) {
                             radioId = 'month'
@@ -158,6 +158,8 @@ function fetchSubscription(force_validation = true) {
                         $('input[name="sub"]').attr('disabled', true);
                         $("div.col-12.mt-1 > input").attr('disabled', true);
                         $("div.col-12.mt-1 > input").val(response.found.topic);
+                        $('#invalidCheck').attr('checked', true);
+                        $('#invalidCheck').attr('disabled', true);
                         $('#regbtn').html('Unregister');
                         $('#regbtn').off('click').on('click', unSub);
                         alertNotify(message, 'success');
@@ -190,6 +192,8 @@ function unSub() {
                 console.log(response)
                 $('input[name="sub"]').removeAttr('disabled');
                 $("div.col-12.mt-1 > input").removeAttr('disabled');
+                $('#invalidCheck').removeAttr('disabled');
+                $('#invalidCheck').attr('checked', false);
                 $('#regbtn').html('Register');
                 $('#regbtn').off('click').on('click', fetchSubscription)
                 stopPreloader();
