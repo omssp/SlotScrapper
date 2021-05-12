@@ -55,6 +55,7 @@ function askNotificationPermission() {
                     fetchSubscription(false);
                 else
                     unSub();
+                window.history.replaceState("object or string", document.title, "/");
             })
             .catch(function(err) {
                 $('#enableNotify').removeClass('d-none');

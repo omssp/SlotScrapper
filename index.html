@@ -120,7 +120,7 @@
             margin-top: 16px;
         }
         
-        .form-content input:focus:invalid {
+        .form-content input:focus:invalid:not(:placeholder-shown) {
             box-shadow: 0 0 0.25rem 0.20rem #f443369c;
         }
         
@@ -264,8 +264,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>
     <script src="//www.gstatic.com/firebasejs/8.6.0/firebase-app.js"></script>
     <script src="//www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js"></script>
-    <script src="init.js"></script>
-    <script src="notify.js"></script>
+    <script src="//cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/init.js"></script>
+    <script src="//cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/notify.js"></script>
 </body>
 
 </html>

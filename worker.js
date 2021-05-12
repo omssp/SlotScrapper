@@ -1,7 +1,7 @@
 const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
-const redirect_url = "https://selfregistration.cowin.gov.in/"
+const redirect_url = "https://selfregistration.cowin.gov.in/";
 
 const NotifyOptions = {
     method: 'POST',
@@ -14,10 +14,15 @@ const NotifyOptions = {
 };
 
 addEventListener('fetch', function(event) {
-    const { request } = event
-    const response = handleRequest(request).catch(handleError)
-    event.respondWith(response)
-})
+    const { request } = event;
+    const response = handleRequest(request).catch(handleError);
+    event.respondWith(response);
+});
+
+URL.prototype.getFilteredParams = (param) => {
+    let res = this.searchParams.get(param);
+    return res ? res.trim() : false;
+};
 
 /**
  * Receives a HTTP request and replies with a response.
@@ -25,31 +30,27 @@ addEventListener('fetch', function(event) {
  * @returns {Promise<Response>}
  */
 async function handleRequest(request) {
-    const { method, url } = request
-    const theURL = new URL(url)
-    const { host, pathname } = theURL
+    const { method, url } = request;
+    const theURL = new URL(url);
+    const { host, pathname } = theURL;
 
-    let token = theURL.searchParams.get('clientToken')
-    token = (token) ? token.trim() : false
-    let topic = theURL.searchParams.get('topic')
-    topic = topic ? topic.trim() : false
-    let days = theURL.searchParams.get('days')
-    days = days ? days.trim() : false
+    let token = theURL.getFilteredParams('clientToken');
+    let topic = theURL.getFilteredParams('topic');
+    let days = theURL.getFilteredParams('days');
+
     if (pathname.startsWith('/@action')) {
-
         if (token && topic) {
-            return subscribeORCheck(token, topic, days)
-
+            return subscribeORCheck(token, topic, days);
         } else if (token) {
-            return checkSubed(token)
+            return checkSubed(token);
         }
     } else if (pathname.startsWith('/@remove') && token) {
-        return unSub(token)
+        return unSub(token);
     } else if (pathname.startsWith('/@subrs') && topic === "password") {
         if (days === 'purge') {
-            await saveToStorage(JSON.stringify([]))
+            await saveToStorage(JSON.stringify([]));
         } else if (days === 'expired') {
-            //todo :function that will delete expired entries
+            //todo : function that will delete expired entries
         }
         return new Response(await getFromStorage(), {
             headers: {
@@ -57,24 +58,19 @@ async function handleRequest(request) {
             }
         });
     } else if (pathname.startsWith('/@notification')) {
-        return sendNotifications()
+        return sendNotifications();
     } else if (pathname.startsWith('/@notify')) {
-
-        let action = theURL.searchParams.get('action')
-        action = action ? action.trim() : false
-
+        let action = theURL.getFilteredParams('action');
         switch (action) {
             case 'dismiss-unregister':
                 return returnWithGit('/index.html');
-                break;
             default:
                 return new Response('', {
                     status: 307,
                     headers: {
                         'Location': redirect_url
                     }
-                })
-                break;
+                });
         }
     }
 
@@ -90,32 +86,32 @@ async function handleRequest(request) {
         case '/manifest.json':
             return returnWithGit(pathname);
         case '/robots.txt':
-            return new Response(null, { status: 204 })
+            return new Response(null, { status: 204 });
     }
 
-    // Workers on these hostnames have no origin server,
+    // Workers on these host names have no origin server,
     // therefore there is nothing else to be found
     if (host.endsWith('.workers.dev') ||
         host.endsWith('.cloudflareworkers.com')) {
-        return new Response('Not Found', { status: 404 })
+        return new Response('Not Found', { status: 404 });
     }
 
     // Makes a fetch request to the origin server
-    return fetch(request)
+    return fetch(request);
 }
 
 async function returnWithGit(what) {
-    let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`
+    let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`;
     const r = await fetch(theLink, {
         cf: {
             cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
         },
     });
-    theMIME = 'text/html'
+    theMIME = 'text/html';
     if (what.endsWith('js')) {
-        theMIME = 'text/javascript'
+        theMIME = 'text/javascript';
     } else if (what.endsWith('json')) {
-        theMIME = 'application/json'
+        theMIME = 'application/json';
     }
     return new Response(r.body, {
         headers: {
@@ -126,28 +122,28 @@ async function returnWithGit(what) {
 }
 
 async function subscribeORCheck(token, topic, days) {
-    days = parseInt(days) ? days : 1
-    topic = parseInt(topic)
+    days = parseInt(days) ? days : 1;
+    topic = parseInt(topic);
 
-    let data = JSON.parse(await getFromStorage())
-    data = data ? data : []
+    let data = JSON.parse(await getFromStorage());
+    data = data ? data : [];
 
-    let body = { subscribed: 'old' }
-    body.found = data.find(o => o.token == token)
+    let body = { subscribed: 'old' };
+    body.found = data.find(o => o.token == token);
 
     if (!body.found && topic && topic > 100000 && topic < 999999) {
 
-        let subr = { token, topic, days, datets: (new Date()) }
-        data.push(subr)
-        await saveToStorage(JSON.stringify(data))
-        body.subscribed = 'new'
-        body.found = subr
+        let subscriber = { token, topic, days, ts: (new Date()) };
+        data.push(subscriber);
+        await saveToStorage(JSON.stringify(data));
+        body.subscribed = 'new';
+        body.found = subscriber;
 
-        let options = NotifyOptions
-        options.body = JSON.stringify(buildNotifyBody([token]))
-        await fetch(options.url, options)
+        let options = NotifyOptions;
+        options.body = JSON.stringify(buildNotifyBody([token]));
+        await fetch(options.url, options);
     } else if (!body.found) {
-        body.subscribed = false
+        body.subscribed = false;
     }
     return new Response(JSON.stringify(body), {
         headers: {
@@ -157,16 +153,16 @@ async function subscribeORCheck(token, topic, days) {
 }
 
 async function unSub(token) {
-    let data = JSON.parse(await getFromStorage())
-    data = data ? data : []
+    let data = JSON.parse(await getFromStorage());
+    data = data ? data : [];
 
-    let body = { subscribed: "404" }
-    body.foundIndex = data.findIndex(o => o.token == token)
+    let body = { subscribed: "404" };
+    body.foundIndex = data.findIndex(o => o.token == token);
 
     if (body.found != -1) {
-        body.subscribed = false
-        data.splice(body.foundIndex, 1)
-        await saveToStorage(JSON.stringify(data))
+        body.subscribed = false;
+        data.splice(body.foundIndex, 1);
+        await saveToStorage(JSON.stringify(data));
     }
     return new Response(JSON.stringify(body), {
         headers: {
@@ -176,14 +172,14 @@ async function unSub(token) {
 }
 
 async function checkSubed(token) {
-    let data = JSON.parse(await getFromStorage())
-    data = data ? data : []
+    let data = JSON.parse(await getFromStorage());
+    data = data ? data : [];
 
-    let body = { subscribed: 'old' }
-    body.found = data.find(o => o.token == token)
+    let body = { subscribed: 'old' };
+    body.found = data.find(o => o.token == token);
 
     if (!body.found) {
-        body.subscribed = false
+        body.subscribed = false;
     }
     return new Response(JSON.stringify(body), {
         headers: {
@@ -198,15 +194,15 @@ async function checkSubed(token) {
  * @returns {Response}
  */
 function handleError(error) {
-    console.error('Uncaught error:', error)
+    console.error('Uncaught error:', error);
 
-    const { stack } = error
+    const { stack } = error;
     return new Response(stack || error, {
         status: 500,
         headers: {
             'Content-Type': 'text/plain;charset=UTF-8'
         }
-    })
+    });
 }
 
 function buildNotifyBody(
@@ -247,82 +243,82 @@ function buildNotifyBody(
     }
     theBody.data.notification.actions = theBody.data.notification.actions.reverse();
 
-    return theBody
+    return theBody;
 }
 
 async function sendNotifications() {
 
-    let data = JSON.parse(await getFromStorage())
+    let data = JSON.parse(await getFromStorage());
 
-    let pinCodes = {}
+    let pinCodes = {};
     data.forEach(o => {
         (o.topic in pinCodes) ? (pinCodes[o.topic].push(o.token)) : (pinCodes[o.topic] = [o.token]);
     });
 
-    let notifyResponses = []
+    let notifyResponses = [];
 
     for (const [pinCode, tokens] of Object.entries(pinCodes)) {
         console.log(pinCode, tokens);
 
-        let dateObj = new Date((new Date).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" }));
-        let todaysDate = dateObj.toJSON().slice(0, 10).split('-').reverse().join('-')
-        let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`
+        let dateObj = new Date((new Date()).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" }));
+        let todaysDate = dateObj.toJSON().slice(0, 10).split('-').reverse().join('-');
+        let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`;
 
-        let totalSlotsCount = 0
+        let totalSlotsCount = 0;
         let msgBody = `Hurry Up; Book Fast\n\n`;
 
-        let response = await (await fetch(apiURL)).text()
-            // console.log(apiURL, response)
+        let response = await (await fetch(apiURL)).text();
+        // console.log(apiURL, response)
         if (response.startsWith('{')) {
-            response = JSON.parse(response)
+            response = JSON.parse(response);
 
-            response.centers.forEach(center => {
-                let centerSessionsCount = 0
-                let ageWise = {}
+            response.centers.forEach((center) => {
+                let centerSessionsCount = 0;
+                let ageWise = {};
                 center.sessions.forEach(session => {
-                    let count = parseInt(session.available_capacity)
+                    let count = parseInt(session.available_capacity);
                     if (count) {
-                        totalSlotsCount += count
-                        centerSessionsCount += count
+                        totalSlotsCount += count;
+                        centerSessionsCount += count;
                     }
                     if (session.min_age_limit in ageWise) {
-                        ageWise[session.min_age_limit] += count
+                        ageWise[session.min_age_limit] += count;
                     } else {
-                        ageWise[session.min_age_limit] = count
+                        ageWise[session.min_age_limit] = count;
                     }
 
                 });
                 if (centerSessionsCount >= 0) {
-                    let midStr = ''
+                    let midStr = '';
                     for (const [age, count] of Object.entries(ageWise)) {
-                        midStr += `${count}(${age}Y) `
+                        midStr += `${count}(${age}Y) `;
                     }
-                    msgBody += `${midStr.length ? midStr : (centerSessionsCount + ' ')}\u{2022} ${center.address}\n`
+                    msgBody += `${midStr.length ? midStr : (centerSessionsCount + ' ')}\u{2022} ${center.address}\n`;
                 }
             });
         }
-        let currMin = (new Date()).getMinutes()
-        console.log(msgBody)
+        let currMin = (new Date()).getMinutes();
+        // console.log(msgBody);
         if (
             (totalSlotsCount >= 0 && msgBody.length > 25) ||
             ((currMin == 49 || currMin == 6 || currMin == 35 || currMin == 20) && response.length == undefined)
         ) {
-            let options = NotifyOptions
-            let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`
-            msgBody += `\nTake Care`
+            let options = NotifyOptions;
+            let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`;
+            msgBody += `\nTake Care`;
             if (!totalSlotsCount) {
-                title = `Summary of slots available at ${pinCode} \u{1f614}`
-                msgBody = msgBody.substr(21)
-                msgBody += ' \u{1f614}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, false, 'noSlotInfo', true, 2, "old-badge-min.png"))
+                title = `Summary of slots available at ${pinCode} \u{1f614}`;
+                msgBody = msgBody.substr(21);
+                msgBody += ' \u{1f614}';
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, false, 'noSlotInfo', true, 2, "old-badge-min.png"));
             } else {
-                msgBody += ' \u{1f60a}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody))
+                msgBody += ' \u{1f60a}';
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody));
             }
             // console.log(JSON.stringify(options))
-            notifyResponses.push(await fetch(options.url, options))
+            notifyResponses.push(await fetch(options.url, options));
         } else {
-            notifyResponses.push(`${apiURL} : ${response.length} : ${response.centers?.length}`)
+            notifyResponses.push(`${apiURL} : ${response.length} : ${response.centers?.length}`);
         }
     }
 
