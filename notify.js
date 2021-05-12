@@ -51,7 +51,7 @@ function askNotificationPermission() {
                 clientToken = token;
                 console.log("token is : " + token);
                 let action = (new URL(window.location.href)).searchParams.get("action");
-                if (action.indexOf('dismiss-unregister') == -1)
+                if (!action || action.indexOf('dismiss-unregister') == -1)
                     fetchSubscription(false);
                 else
                     unSub();
