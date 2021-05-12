@@ -5,7 +5,7 @@ const NotifyOptions = {
     method: 'POST',
     url: 'https://fcm.googleapis.com/fcm/send',
     headers: {
-        'Authorization': 'key=AAAA8dFXWdE:APA91bG9JLLAfunOANuyJEHf8Ak5rBUZ5EAN5fpxt_klXdj7lYdd0CFfnsmEUyK3TjEMZjqB3NduwCftrLqJJCprAG0Sw5kTPN--VFBF_KoB0R3xppFCRiaaI7YCVbrbFKKMpr2n0CKv',
+        'Authorization': `key=${AUTH_KEY}`,
         'Content-Type': 'application/json'
     },
     body: {}
@@ -196,32 +196,34 @@ function buildNotifyBody(
     tag = 'newSlotNotify',
     renotify = true,
     priority = 0,
-    badge = "https://vomkar.droppages.com/new-badge.png"
+    badge = "new-badge-min.png"
 ) {
     // console.log(tokens_array)
     let theBody = {
-        data: {
-            notification: {
-                title,
-                body,
-                icon: "http://vomkar.droppages.com/icon.png",
-                badge,
-                vibrate: [200, 100, 200],
-                renotify,
-                tag,
-                actions: [{
-                    action: "dismiss",
-                    title: "Okay"
-                }]
-            },
-            url: "https://selfregistration.cowin.gov.in/",
+        notification: {
+            title,
+            body,
+            icon: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
+            badge: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
+            vibrate: [200, 100, 200],
+            renotify,
+            tag,
+            priority,
+            actions: [{
+                action: "dismiss-only",
+                title: "Okay"
+            }, {
+                action: "dismiss-unregister",
+                title: "Unregister"
+            }]
         },
+        data: {},
         registration_ids: tokens_array
     };
     if (visit_action) {
-        theBody.data.notification.actions.push({ action: "visit", title: "Book Slot" });
-        theBody.data.notification.actions = theBody.data.notification.actions.reverse()
+        theBody.notification.actions.push({ action: "visit", title: "Book Slot" });
     }
+    theBody.notification.actions = theBody.notification.actions.reverse()
 
     return theBody
 }
@@ -290,7 +292,7 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`
                 msgBody = msgBody.substr(21)
                 msgBody += ' \u{1f614}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2, "https://vomkar.droppages.com/old-badge.png"))
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2, "old-badge-min.png"))
             } else {
                 msgBody += ' \u{1f60a}'
                 options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))

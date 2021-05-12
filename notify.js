@@ -1,20 +1,13 @@
-var firebaseConfig = {
-    messagingSenderId: "1038599281105",
-    apiKey: "AIzaSyBMkdyBvH87S21fiu9GdiHHbcE0IVCAqPg",
-    projectId: "slotscra",
-    appId: "1:1038599281105:web:f9fa1cf08f99e7d28d28f0",
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const messaging = firebase.messaging();
+importScripts('/init.js');
 
 let clientToken;
 let origin = '';
 let first_notify;
 
+const messaging = firebase.messaging();
+
 $(document).ready(() => {
-    first_notify = alertNotify('Please Allow the Notifications', 'info', 'topCenter', 25000);
+    first_notify = alertNotify('Welcome to Slot Availabiliy Alerts<br>Please Allow the Notifications', 'info', 'topCenter', 25000);
 
     askNotificationPermission();
 
@@ -46,7 +39,7 @@ function checkNotificationPromise() {
 
 function askNotificationPermission() {
     showPreloader();
-    // function to actually ask the permissions
+
     function handlePermission(permission) {
         messaging
             .requestPermission()
@@ -59,6 +52,7 @@ function askNotificationPermission() {
                 $('#regbtn').removeClass('d-none');
                 clientToken = token;
                 console.log("token is : " + token);
+                //todo check for un register param in URL and call unregister
                 fetchSubscription(false);
             })
             .catch(function(err) {
@@ -66,7 +60,7 @@ function askNotificationPermission() {
                 $('#regbtn').addClass('d-none');
                 if (Notification.permission === 'denied') {
                     // alert("Notifications blocked. Please enable them in your browser.");
-                    alertNotify('Notifications blocked. Please enable them in your browser.', 'error');
+                    alertNotify('Notifications blocked.<br/>Please enable them in your browser.', 'error');
                 }
                 console.log("Unable to get permission to notify.", err);
                 alertNotify(err.message, 'error', 'bottomCenter');
@@ -74,7 +68,6 @@ function askNotificationPermission() {
             });
     }
 
-    // Let's check if the browser supports notifications
     if (!('Notification' in window)) {
         // alert("This browser does not support notifications.");
         alertNotify('This browser does not support notifications.', 'warning');
@@ -196,8 +189,8 @@ function unSub() {
                 $('#invalidCheck').attr('checked', false);
                 $('#regbtn').html('Register');
                 $('#regbtn').off('click').on('click', fetchSubscription)
+                alertNotify(`You have been Unregistered`, 'warning');
                 stopPreloader();
-                alertNotify(`You have been Unregistered`, 'warning', 'bottomCenter');
             },
             error: function(e) {
                 console.log(e);
