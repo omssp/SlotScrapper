@@ -104,7 +104,7 @@ async function returnWithGit(what) {
     let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`;
     const r = await fetch(theLink, {
         cf: {
-            cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
+            cacheTtlByStatus: { "200-299": 9999990, 404: 1, "500-599": 0 }
         },
     });
     theMIME = 'text/html';
@@ -116,7 +116,7 @@ async function returnWithGit(what) {
     return new Response(r.body, {
         headers: {
             'Content-Type': theMIME + '; charset=utf-8',
-            'Cache-Control': 'max-age=6912000'
+            'Cache-Control': 'max-age=9999990'
         }
     });
 }
