@@ -1,3 +1,5 @@
+importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-app.js");
+importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js");
 importScripts('/init.js');
 
 const messaging = firebase.messaging();
