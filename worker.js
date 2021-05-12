@@ -126,7 +126,7 @@ async function subscribeORCheck(token, topic, days) {
         let options = NotifyOptions
         options.body = JSON.stringify(buildNotifyBody([token]))
         await fetch(options.url, options)
-    } else {
+    } else if (!body.found) {
         body.subscribed = false
     }
     return new Response(JSON.stringify(body), {
