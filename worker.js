@@ -100,17 +100,17 @@ async function handleRequest(request) {
     return fetch(request);
 }
 
-async function returnWithGit(what) {
-    let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`;
+async function returnWithGit(where) {
+    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.0${where}`;
     const r = await fetch(theLink, {
         cf: {
             cacheTtlByStatus: { "200-299": 9999990, 404: 1, "500-599": 0 }
         },
     });
     theMIME = 'text/html';
-    if (what.endsWith('js')) {
+    if (where.endsWith('js')) {
         theMIME = 'text/javascript';
-    } else if (what.endsWith('json')) {
+    } else if (where.endsWith('json')) {
         theMIME = 'application/json';
     }
     return new Response(r.body, {
