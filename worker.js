@@ -24,6 +24,41 @@ URL.prototype.getFilteredParams = function(param) {
     return res ? res.trim() : false;
 };
 
+String.prototype.polynomialRollingHash = function() {
+    // P and M
+    let p = 31;
+    let m = 1e9 + 9;
+    let power_of_p = 1;
+    let hash_val = 0;
+
+    // Loop to calculate the hash value
+    // by iterating over the elements of stringToHashing
+    for (let i = 0; i < this.length; i++) {
+        hash_val = (hash_val + (this.charCodeAt(i) - 64) * power_of_p) % m;
+        power_of_p = (power_of_p * p) % m;
+    }
+    return hash_val;
+};
+
+async function filterSubscribers(subscribers, saveUpdatedSubscribers = false) {
+    subscribers.forEach((o, i) => {
+        // console.log(o)
+        if (o.ts) {
+            let dateTo = new Date();
+            let dateFrom = new Date(o.ts);
+            o.days_remaining = parseFloat((parseInt(o.days) - (dateTo.valueOf() - dateFrom.valueOf()) / (1000 * 60 * 60 * 24)).toFixed(2));
+            delete o.days;
+            delete o.ts;
+        }
+    });
+    if (saveUpdatedSubscribers) {
+        subscribers = subscribers.filter(o => o.days_remaining > 0);
+        await saveToStorage(JSON.stringify(subscribers));
+        subscribers.push("all above entries are purged");
+    }
+    return subscribers;
+}
+
 /**
  * Receives a HTTP request and replies with a response.
  * @param {Request} request
@@ -46,13 +81,15 @@ async function handleRequest(request) {
         }
     } else if (pathname.startsWith('/@remove') && token) {
         return unSub(token);
-    } else if (pathname.startsWith('/@subrs') && topic === "password") {
+    } else if (pathname.startsWith('/@subrs') && topic === PASS_WORD) {
+        let subscribers = JSON.parse(await getFromStorage());
         if (days === 'purge') {
             await saveToStorage(JSON.stringify([]));
         } else if (days === 'expired') {
-            //todo : function that will delete expired entries
+            subscribers = await filterSubscribers(subscribers, true);
         }
-        return new Response(await getFromStorage(), {
+        subscribers = await filterSubscribers(subscribers);
+        return new Response(JSON.stringify(subscribers), {
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
             }
@@ -73,8 +110,6 @@ async function handleRequest(request) {
                 });
         }
     }
-
-
 
     switch (pathname) {
         case '/':
@@ -209,9 +244,9 @@ function buildNotifyBody(
     tokens_array = [],
     title = `Hey There \u{1f44b}`,
     body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available at you Registered Pin Code",
-    add_booking = true,
     tag = 'newSlotNotify',
     renotify = true,
+    add_booking = true,
     priority = 0,
     badge = "new-badge-min.png"
 ) {
@@ -248,10 +283,10 @@ function buildNotifyBody(
 
 async function sendNotifications() {
 
-    let data = JSON.parse(await getFromStorage());
+    let subscribers = JSON.parse(await getFromStorage());
 
     let pinCodes = {};
-    data.forEach(o => {
+    subscribers.forEach(o => {
         (o.topic in pinCodes) ? (pinCodes[o.topic].push(o.token)) : (pinCodes[o.topic] = [o.token]);
     });
 
@@ -297,10 +332,14 @@ async function sendNotifications() {
                 }
             });
         }
-        let currMin = (new Date()).getMinutes();
+        let dateNow = new Date();
+        let currMin = dateNow.getMinutes();
+        if (currMin === 0 && dateNow.getHours() === 0) {
+            await filterSubscribers(subscribers, true);
+        }
         // console.log(msgBody);
         if (
-            (totalSlotsCount >= 0 && msgBody.length > 25) ||
+            (totalSlotsCount > 0 && msgBody.length > 25) ||
             ((currMin == 49 || currMin == 6 || currMin == 35 || currMin == 20) && response.length == undefined)
         ) {
             let options = NotifyOptions;
@@ -310,10 +349,12 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`;
                 msgBody = msgBody.substr(21);
                 msgBody += ' \u{1f614}';
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, false, 'noSlotInfo', true, 2, "old-badge-min.png"));
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `info${msgBody.polynomialRollingHash()}`, true, false, 2, "old-badge-min.png"));
             } else {
                 msgBody += ' \u{1f60a}';
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody));
+                let notify_tag = `wow${msgBody.polynomialRollingHash()}`;
+                msgBody.replace('\n', `\nat ${(dateNow.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }).substr(-11))}\n`);
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, notify_tag, false));
             }
             // console.log(JSON.stringify(options))
             notifyResponses.push(await fetch(options.url, options));
