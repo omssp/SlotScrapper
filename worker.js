@@ -19,7 +19,7 @@ addEventListener('fetch', function(event) {
     event.respondWith(response);
 });
 
-URL.prototype.getFilteredParams = (param) => {
+URL.prototype.getFilteredParams = function(param) {
     let res = this.searchParams.get(param);
     return res ? res.trim() : false;
 };
