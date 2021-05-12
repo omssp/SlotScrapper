@@ -11,13 +11,13 @@ $(document).ready(() => {
 
     messaging.onMessage(function(payload) {
         console.log("onMessage: ", payload);
-        const notification = JSON.parse(payload.data.notification)
+        const notification = JSON.parse(payload.data.notification);
         navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope')
             .then(registration => {
                 registration.showNotification(
                     notification.title,
                     notification
-                )
+                );
             });
     });
 });
@@ -43,15 +43,18 @@ function askNotificationPermission() {
             .requestPermission()
             .then(function() {
                 console.log("Notification permission granted.");
-                return messaging.getToken()
+                return messaging.getToken();
             })
             .then(function(token) {
                 $('#enableNotify').addClass('d-none');
                 $('#regbtn').removeClass('d-none');
                 clientToken = token;
                 console.log("token is : " + token);
-                //todo check for un register param in URL and call unregister
-                fetchSubscription(false);
+                let action = (new URL(window.location.href)).searchParams.get("action");
+                if (action.indexOf('dismiss-unregister') == -1)
+                    fetchSubscription(false);
+                else
+                    unSub();
             })
             .catch(function(err) {
                 $('#enableNotify').removeClass('d-none');
@@ -74,7 +77,7 @@ function askNotificationPermission() {
             Notification.requestPermission()
                 .then((permission) => {
                     handlePermission(permission);
-                })
+                });
         } else {
             Notification.requestPermission(function(permission) {
                 handlePermission(permission);
@@ -98,24 +101,24 @@ function stopPreloader() {
 
 function fetchSubscription(force_validation = true) {
     let topic = parseInt($("div.col-12.mt-1 > input").val());
-    let consentGiven = $('#invalidCheck').is(":checked")
+    let consentGiven = $('#invalidCheck').is(":checked");
     if (force_validation) {
-        let flag = false
+        let flag = false;
         if (!consentGiven) {
             alertNotify(`Please confirm to receive Notification`, 'warning', 'topCenter');
-            flag = true
+            flag = true;
         }
         if (!topic || topic < 100000 || topic > 999999) {
             alertNotify(`Please enter a valid Pin Code`, 'warning', 'topCenter');
-            flag = true
+            flag = true;
         }
         if (flag)
-            return
+            return;
     }
     $.when(showPreloader()).then(() => {
 
-        let theURL = `${origin}/@action`
-        let days = 1
+        let theURL = `${origin}/@action`;
+        let days = 1;
         switch ($('input[name="sub"]:checked').attr('id')) {
             case "week":
                 days = 7;
@@ -134,17 +137,17 @@ function fetchSubscription(force_validation = true) {
             },
             async: false,
             success: function(response) {
-                console.log(response)
-                let radioId = 'day'
-                let message = `Welcome back!<br/> You have already Registered and are receiving the Notifications Updates`
+                console.log(response);
+                let radioId = 'day';
+                let message = `Welcome back!<br/> You have already Registered and are receiving the Notifications Updates`;
                 switch (response.subscribed) {
                     case "new":
-                        message = `Congratulations!<br/> You have Registered and will be receive the Notifications Updates`
+                        message = `Congratulations!<br/> You have Registered and will be receive the Notifications Updates`;
                     case "old":
                         if (response.found.days > 7) {
-                            radioId = 'month'
+                            radioId = 'month';
                         } else if (response.found.days > 1) {
-                            radioId = 'week'
+                            radioId = 'week';
                         }
                         $('input[name="sub"]').attr('disabled', true);
                         $("div.col-12.mt-1 > input").attr('disabled', true);
@@ -171,7 +174,7 @@ function fetchSubscription(force_validation = true) {
 
 function unSub() {
     $.when(showPreloader()).then(() => {
-        let theURL = `${origin}/@remove`
+        let theURL = `${origin}/@remove`;
         $.ajax({
             method: "GET",
             url: theURL,
@@ -180,13 +183,13 @@ function unSub() {
             },
             async: false,
             success: function(response) {
-                console.log(response)
+                console.log(response);
                 $('input[name="sub"]').removeAttr('disabled');
                 $("div.col-12.mt-1 > input").removeAttr('disabled');
                 $('#invalidCheck').removeAttr('disabled');
                 $('#invalidCheck').attr('checked', false);
                 $('#regbtn').html('Register');
-                $('#regbtn').off('click').on('click', fetchSubscription)
+                $('#regbtn').off('click').on('click', fetchSubscription);
                 alertNotify(`You have been Unregistered`, 'warning');
                 stopPreloader();
             },

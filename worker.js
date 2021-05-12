@@ -1,6 +1,8 @@
 const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
+const redirect_url = "https://selfregistration.cowin.gov.in/"
+
 const NotifyOptions = {
     method: 'POST',
     url: 'https://fcm.googleapis.com/fcm/send',
@@ -54,8 +56,26 @@ async function handleRequest(request) {
                 'Content-Type': 'application/json; charset=utf-8',
             }
         });
-    } else if (pathname.startsWith('/@notify')) {
+    } else if (pathname.startsWith('/@notification')) {
         return sendNotifications()
+    } else if (pathname.startsWith('/@notify')) {
+
+        let action = theURL.searchParams.get('action')
+        action = action ? action.trim() : false
+
+        switch (action) {
+            case 'dismiss-unregister':
+                return returnWithGit('/index.html');
+                break;
+            default:
+                return new Response('', {
+                    status: 307,
+                    headers: {
+                        'Location': redirect_url
+                    }
+                })
+                break;
+        }
     }
 
 
@@ -87,9 +107,9 @@ async function handleRequest(request) {
 async function returnWithGit(what) {
     let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`
     const r = await fetch(theLink, {
-        // cf: {
-        //     cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
-        // },
+        cf: {
+            cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
+        },
     });
     theMIME = 'text/html'
     if (what.endsWith('js')) {
@@ -98,10 +118,10 @@ async function returnWithGit(what) {
         theMIME = 'application/json'
     }
     return new Response(r.body, {
-        // headers: {
-        //     'Content-Type': theMIME + '; charset=utf-8',
-        //     'Cache-Control': 'max-age=6912000'
-        // }
+        headers: {
+            'Content-Type': theMIME + '; charset=utf-8',
+            'Cache-Control': 'max-age=6912000'
+        }
     });
 }
 
@@ -193,7 +213,7 @@ function buildNotifyBody(
     tokens_array = [],
     title = `Hey There \u{1f44b}`,
     body = "You will receive a similar notification when any\nCOWIN or COVISHIELD Sessions become available at you Registered Pin Code",
-    visit_action = false,
+    add_booking = true,
     tag = 'newSlotNotify',
     renotify = true,
     priority = 0,
@@ -201,30 +221,31 @@ function buildNotifyBody(
 ) {
     // console.log(tokens_array)
     let theBody = {
-        notification: {
-            title,
-            body,
-            icon: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
-            badge: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
-            vibrate: [200, 100, 200],
-            renotify,
-            tag,
-            priority,
-            actions: [{
-                action: "dismiss-only",
-                title: "Okay"
-            }, {
-                action: "dismiss-unregister",
-                title: "Unregister"
-            }]
+        data: {
+            notification: {
+                title,
+                body,
+                icon: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
+                badge: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
+                vibrate: [200, 100, 200],
+                renotify,
+                tag,
+                priority,
+                actions: [{
+                    action: "dismiss-only",
+                    title: "Okay"
+                }, {
+                    action: "dismiss-unregister",
+                    title: "Unregister"
+                }]
+            },
         },
-        data: {},
         registration_ids: tokens_array
     };
-    if (visit_action) {
-        theBody.notification.actions.push({ action: "visit", title: "Book Slot" });
+    if (add_booking) {
+        theBody.data.notification.actions.push({ action: "visit", title: "Book Slot" });
     }
-    theBody.notification.actions = theBody.notification.actions.reverse()
+    theBody.data.notification.actions = theBody.data.notification.actions.reverse();
 
     return theBody
 }
@@ -293,10 +314,10 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`
                 msgBody = msgBody.substr(21)
                 msgBody += ' \u{1f614}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true, 'noSlotInfo', true, 2, "old-badge-min.png"))
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, false, 'noSlotInfo', true, 2, "old-badge-min.png"))
             } else {
                 msgBody += ' \u{1f60a}'
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, true))
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody))
             }
             // console.log(JSON.stringify(options))
             notifyResponses.push(await fetch(options.url, options))
