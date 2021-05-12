@@ -64,6 +64,7 @@ async function handleRequest(request) {
         case '/':
             return returnWithGit('/index.html');
         case '/index.html':
+        case '/init.js':
         case '/notify.js':
         case '/firebase-messaging-sw.js':
         case '/manifest.json':
@@ -86,9 +87,9 @@ async function handleRequest(request) {
 async function returnWithGit(what) {
     let theLink = `https://raw.githubusercontent.com/omssp/SlotScrapper/master${what}`
     const r = await fetch(theLink, {
-        cf: {
-            cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
-        },
+        // cf: {
+        //     cacheTtlByStatus: { "200-299": 6912000, 404: 1, "500-599": 0 }
+        // },
     });
     theMIME = 'text/html'
     if (what.endsWith('js')) {
@@ -97,10 +98,10 @@ async function returnWithGit(what) {
         theMIME = 'application/json'
     }
     return new Response(r.body, {
-        headers: {
-            'Content-Type': theMIME + '; charset=utf-8',
-            'Cache-Control': 'max-age=6912000'
-        }
+        // headers: {
+        //     'Content-Type': theMIME + '; charset=utf-8',
+        //     'Cache-Control': 'max-age=6912000'
+        // }
     });
 }
 

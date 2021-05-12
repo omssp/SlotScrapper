@@ -1,5 +1,3 @@
-importScripts('/init.js');
-
 let clientToken;
 let origin = '';
 let first_notify;
