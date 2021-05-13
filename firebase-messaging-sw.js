@@ -32,7 +32,7 @@ self.addEventListener('notificationclick', function(event) {
             })
         );
     }
-    if (action && action.indexOf('dismiss') != -1) {
+    if ((action && action.indexOf('dismiss') != -1) || (event.notification.tag && event.notification.tag.indexOf('dismiss') != -1)) {
         event.notification.close();
     }
     console.log(`open the website : /@notify?action=${action}`);
