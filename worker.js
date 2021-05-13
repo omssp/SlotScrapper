@@ -361,7 +361,7 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`;
                 msgBody = msgBody.substr(21);
                 msgBody += ' \u{1f614}';
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `info${msgBody.polynomialRollingHash()}`, false, false, 2, "old-badge-min.png"));
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `dismiss${msgBody.polynomialRollingHash()}`, false, false, 2, "old-badge-min.png"));
             } else {
                 msgBody += ' \u{1f60a}';
                 let notify_tag = `wow${msgBody.polynomialRollingHash()}`;
