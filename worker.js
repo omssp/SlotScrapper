@@ -41,20 +41,20 @@ String.prototype.polynomialRollingHash = function() {
 };
 
 async function filterSubscribers(subscribers, saveUpdatedSubscribers = false) {
+    let oldCount = subscribers.length;
     subscribers.forEach((o, i) => {
         // console.log(o)
         if (o.ts) {
             let dateTo = new Date();
             let dateFrom = new Date(o.ts);
             o.days_remaining = parseFloat((parseInt(o.days) - (dateTo.valueOf() - dateFrom.valueOf()) / (1000 * 60 * 60 * 24)).toFixed(2));
-            delete o.days;
-            delete o.ts;
         }
     });
     if (saveUpdatedSubscribers) {
         subscribers = subscribers.filter(o => o.days_remaining > 0);
-        await saveToStorage(JSON.stringify(subscribers));
-        subscribers.push("all above entries are purged");
+        if (oldCount != subscribers.length) {
+            await saveToStorage(JSON.stringify(subscribers));
+        }
     }
     return subscribers;
 }
@@ -85,6 +85,7 @@ async function handleRequest(request) {
         let subscribers = JSON.parse(await getFromStorage());
         if (days === 'purge') {
             await saveToStorage(JSON.stringify([]));
+            subscribers.push("all above entries are purged");
         } else if (days === 'expired') {
             subscribers = await filterSubscribers(subscribers, true);
         }
@@ -136,7 +137,7 @@ async function handleRequest(request) {
 }
 
 async function returnWithGit(where) {
-    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.0${where}`;
+    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.1${where}`;
     const r = await fetch(theLink, {
         cf: {
             cacheTtlByStatus: { "200-299": 9999990, 404: 1, "500-599": 0 }
@@ -339,8 +340,19 @@ async function sendNotifications() {
         }
         // console.log(msgBody);
         if (
-            (totalSlotsCount > 0 && msgBody.length > 25) ||
-            ((currMin == 49 || currMin == 6 || currMin == 35 || currMin == 20) && response.length == undefined)
+            msgBody.length > 25 &&
+            (
+                totalSlotsCount > 0 ||
+                (
+                    (
+                        currMin == 49 ||
+                        currMin == 6 ||
+                        currMin == 35 ||
+                        currMin == 20
+                    ) &&
+                    response.length == undefined
+                )
+            )
         ) {
             let options = NotifyOptions;
             let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`;
@@ -349,11 +361,11 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`;
                 msgBody = msgBody.substr(21);
                 msgBody += ' \u{1f614}';
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `info${msgBody.polynomialRollingHash()}`, true, false, 2, "old-badge-min.png"));
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `info${msgBody.polynomialRollingHash()}`, false, false, 2, "old-badge-min.png"));
             } else {
                 msgBody += ' \u{1f60a}';
                 let notify_tag = `wow${msgBody.polynomialRollingHash()}`;
-                msgBody.replace('\n', `\nat ${(dateNow.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }).substr(-11))}\n`);
+                msgBody = msgBody.replace('\n', `\nat ${(dateNow.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }).substr(-11))}\n`);
                 options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, notify_tag, false));
             }
             // console.log(JSON.stringify(options))
