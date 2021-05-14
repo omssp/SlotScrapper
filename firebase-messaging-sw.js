@@ -1,6 +1,6 @@
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js");
-importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.1/init.js');
+importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.2/init.js');
 
 const messaging = firebase.messaging();
 
