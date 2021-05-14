@@ -137,7 +137,7 @@ async function handleRequest(request) {
 }
 
 async function returnWithGit(where) {
-    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.1${where}`;
+    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.2${where}`;
     const r = await fetch(theLink, {
         cf: {
             cacheTtlByStatus: { "200-299": 9999990, 404: 1, "500-599": 0 }
@@ -361,7 +361,7 @@ async function sendNotifications() {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`;
                 msgBody = msgBody.substr(21);
                 msgBody += ' \u{1f614}';
-                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `info${msgBody.polynomialRollingHash()}`, false, false, 2, "old-badge-min.png"));
+                options.body = JSON.stringify(buildNotifyBody(tokens, title, msgBody, `dismiss-info-message`, false, false, 2, "old-badge-min.png"));
             } else {
                 msgBody += ' \u{1f60a}';
                 let notify_tag = `wow${msgBody.polynomialRollingHash()}`;
