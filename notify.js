@@ -20,6 +20,12 @@ $(document).ready(() => {
                 );
             });
     });
+    $(document).on("keypress", "input", function(e){
+        if(e.key == 'Enter'){
+            $("div.col-12.mt-1 > input").blur();
+            $('#regbtn').click();
+        }
+    });
 });
 
 $('#enableNotify').on('click', askNotificationPermission);
