@@ -53,10 +53,30 @@ async function filterSubscribers(subscribers, saveUpdatedSubscribers = false) {
     if (saveUpdatedSubscribers) {
         subscribers = subscribers.filter(o => o.days_remaining > 0);
         if (oldCount != subscribers.length) {
+            removals = subscribers.filter(o => o.days_remaining <= 0.0);
+            await sayGoodBye(removals);
             await saveToStorage(JSON.stringify(subscribers));
         }
     }
     return subscribers;
+}
+
+async function sayGoodBye(listGoers) {
+    let arrayTokens = [];
+    listGoers.forEach(goer => {
+        arrayTokens.push(goer.token);
+    });
+
+    let options = NotifyOptions;
+    let title = `See Ya \u{1f44b}`;
+
+    let msgBody = `Your subscription has ended.\n\nIf you still wish to receive notifications,\nJust Resubscribe. Its FREE \u{1f609}`;
+    let bodyObj = buildNotifyBody(arrayTokens, title, msgBody, `dismiss-bye-bye`);
+    bodyObj.data.notification.actions[0] = { action: "dismiss-bye-bye", title: "Resubscribe" };
+
+    options.body = JSON.stringify(bodyObj);
+
+    await fetch(options.url, options);
 }
 
 /**
@@ -100,6 +120,7 @@ async function handleRequest(request) {
     } else if (pathname.startsWith('/@notify')) {
         let action = theURL.getFilteredParams('action');
         switch (action) {
+            case 'dismiss-bye-bye':
             case 'dismiss-unregister':
                 return returnWithGit('/index.html');
             default:
