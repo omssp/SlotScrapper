@@ -67,12 +67,20 @@ async function sayGoodBye(listGoers) {
         arrayTokens.push(goer.token);
     });
 
+    console.log(arrayTokens)
+
     let options = NotifyOptions;
     let title = `See Ya \u{1f44b}`;
 
-    let msgBody = `Your subscription has ended.\n\nIf you still wish to receive notifications,\nJust Resubscribe. Its FREE \u{1f609}`;
+    let msgBody = `Your subscription has ended.\n\nIf you still wish to receive the Slot Availability Alerts\n\u{1f449} Just Resubscribe, Its FREE \u{1f609}`;
     let bodyObj = buildNotifyBody(arrayTokens, title, msgBody, `dismiss-bye-bye`);
-    bodyObj.data.notification.actions[0] = { action: "dismiss-bye-bye", title: "Resubscribe" };
+    bodyObj.data.notification.actions = [{
+        action: "dismiss-only",
+        title: "Okay"
+    }, {
+        action: "dismiss-bye-bye",
+        title: "Resubscribe"
+    }];
 
     options.body = JSON.stringify(bodyObj);
 
@@ -219,6 +227,7 @@ async function unSub(token) {
     if (body.found != -1) {
         body.subscribed = false;
         data.splice(body.foundIndex, 1);
+        await sayGoodBye([{ token }]);
         await saveToStorage(JSON.stringify(data));
     }
     return new Response(JSON.stringify(body), {
