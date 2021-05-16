@@ -2,6 +2,7 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const redirect_url = "https://selfregistration.cowin.gov.in/";
+const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.3";
 
 const NotifyOptions = {
     method: 'POST',
@@ -166,7 +167,7 @@ async function handleRequest(request) {
 }
 
 async function returnWithGit(where) {
-    let theLink = `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.2${where}`;
+    let theLink = `${githubBaseURL}${where}`;
     const r = await fetch(theLink, {
         cf: {
             cacheTtlByStatus: { "200-299": 9999990, 404: 1, "500-599": 0 }
@@ -287,8 +288,8 @@ function buildNotifyBody(
             notification: {
                 title,
                 body,
-                icon: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
-                badge: `https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@latest/${badge}`,
+                icon: `${githubBaseURL}/${badge}`,
+                badge: `${githubBaseURL}/${badge}`,
                 vibrate: [200, 100, 200],
                 renotify,
                 tag,
@@ -341,6 +342,7 @@ async function sendNotifications() {
             response.centers.forEach((center) => {
                 let centerSessionsCount = 0;
                 let ageWise = {};
+                let dose2_count = 0;
                 center.sessions.forEach(session => {
                     let count = parseInt(session.available_capacity);
                     if (count) {
@@ -352,12 +354,24 @@ async function sendNotifications() {
                     } else {
                         ageWise[session.min_age_limit] = count;
                     }
-
+                    if (session.available_capacity_dose2) {
+                        dose2_count += session.available_capacity_dose2;
+                    }
                 });
+                if (dose2_count) {
+                    Object.keys(ageWise).forEach(age => {
+                        let dose0 = ageWise[age] - dose2_count;
+                        ageWise[age] = '';
+                        if (dose0) {
+                            ageWise[age] = `${dose0}-D1 `;
+                        }
+                        ageWise[age] += `${dose2_count}-D2`;
+                    });
+                }
                 if (centerSessionsCount >= 0) {
                     let midStr = '';
                     for (const [age, count] of Object.entries(ageWise)) {
-                        midStr += `${count}(${age}Y) `;
+                        midStr += `${count} (${age}Y) `;
                     }
                     msgBody += `${midStr.length ? midStr : (centerSessionsCount + ' ')}\u{2022} ${center.address}\n`;
                 }

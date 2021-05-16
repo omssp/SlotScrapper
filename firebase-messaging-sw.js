@@ -1,6 +1,6 @@
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js");
-importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.2/init.js');
+importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.3/init.js');
 
 const messaging = firebase.messaging();
 
@@ -8,6 +8,15 @@ messaging.setBackgroundMessageHandler(function(payload) {
     console.log("[firebase-messaging-sw.js] Received background message ", payload);
     const notification = JSON.parse(payload.data.notification);
     const notificationTitle = notification.title;
+
+    self.registration.getNotifications()
+        .then(function(oldNotifications) {
+            oldNotifications.forEach(function(old_notify) {
+                if (old_notify.tag != notification.tag) {
+                    old_notify.close();
+                }
+            });
+        });
 
     return self.registration.showNotification(
         notificationTitle,
