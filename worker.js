@@ -2,7 +2,7 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const redirect_url = "https://selfregistration.cowin.gov.in/";
-const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.3";
+const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.4";
 
 const NotifyOptions = {
     method: 'POST',
