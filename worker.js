@@ -379,7 +379,7 @@ async function sendNotifications() {
         }
         let dateNow = new Date();
         let currMin = dateNow.getMinutes();
-        if (currMin === 0 && dateNow.getHours() === 0) {
+        if (currMin == 0) {
             await filterSubscribers(subscribers, true);
         }
         // console.log(msgBody);
