@@ -2,7 +2,7 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const redirect_url = "https://selfregistration.cowin.gov.in/";
-const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.4";
+const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.5";
 
 const NotifyOptions = {
     method: 'POST',
@@ -52,9 +52,9 @@ async function filterSubscribers(subscribers, saveUpdatedSubscribers = false) {
         }
     });
     if (saveUpdatedSubscribers) {
+        removals = subscribers.filter(o => o.days_remaining <= 0.0);
         subscribers = subscribers.filter(o => o.days_remaining > 0);
         if (oldCount != subscribers.length) {
-            removals = subscribers.filter(o => o.days_remaining <= 0.0);
             await sayGoodBye(removals);
             await saveToStorage(JSON.stringify(subscribers));
         }
@@ -74,12 +74,12 @@ async function sayGoodBye(listGoers) {
     let title = `See Ya \u{1f44b}`;
 
     let msgBody = `Your subscription has ended.\n\nIf you still wish to receive the Slot Availability Alerts\n\u{1f449} Just Resubscribe, Its FREE \u{1f609}`;
-    let bodyObj = buildNotifyBody(arrayTokens, title, msgBody, `dismiss-bye-bye`);
+    let bodyObj = buildNotifyBody(arrayTokens, title, msgBody, `bye-bye-dismiss`);
     bodyObj.data.notification.actions = [{
         action: "dismiss-only",
         title: "Okay"
     }, {
-        action: "dismiss-bye-bye",
+        action: "bye-bye-dismiss",
         title: "Resubscribe"
     }];
 

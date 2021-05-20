@@ -1,6 +1,6 @@
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js");
-importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.4/init.js');
+importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.5/init.js');
 
 const messaging = firebase.messaging();
 
@@ -11,8 +11,9 @@ messaging.setBackgroundMessageHandler(function(payload) {
 
     self.registration.getNotifications()
         .then(function(oldNotifications) {
+            let small_tag = notification.tag.substr(0, 3)
             oldNotifications.forEach(function(old_notify) {
-                if (old_notify.tag != notification.tag) {
+                if (old_notify.tag != notification.tag && old_notify.tag.startsWith(small_tag)) {
                     old_notify.close();
                 }
             });
