@@ -20,6 +20,12 @@ addEventListener('fetch', function(event) {
     event.respondWith(response);
 });
 
+addEventListener('scheduled', event => {
+    event.waitUntil(
+        sendNotifications()
+    )
+});
+
 URL.prototype.getFilteredParams = function(param) {
     let res = this.searchParams.get(param);
     return res ? res.trim() : false;

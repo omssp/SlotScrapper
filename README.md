@@ -10,8 +10,12 @@ Credits
 
 * [Co-WIN Public API](https://apisetu.gov.in/public/api/cowin) - _for getting the slot information_
 * [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) - _for notifications_
-* [Cloudflare Workers](https://workers.cloudflare.com) - _for serving the HTML homepage and for scraping the Co-WIN API and sending FCM notifications_
-* [cron-job.org](https://cron-job.org/en/) - _for executing the Cronjob of monitoring slots_
+* [Cloudflare Workers](https://workers.cloudflare.com) 
+  - _for serving the HTML homepage_
+  - _for scraping the Co-WIN API_
+  - _for sending FCM notifications_
+  - _for executing Cronjob of monitoring slots_
 * [JSDelivr](https://www.jsdelivr.com/) - _for serving static elements of UI_
 * [Colorlib](https://colorlib.com/wp/) - _for the bootstrap form template_
 * [jQuery](https://jquery.com/) - _for making the JS and AJAX easier_
+* ~~[cron-job.org](https://cron-job.org/en/) - _for executing the Cronjob of monitoring slots_~~
