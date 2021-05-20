@@ -2,7 +2,7 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const redirect_url = "https://selfregistration.cowin.gov.in/";
-const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.5";
+const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.6";
 
 const NotifyOptions = {
     method: 'POST',
@@ -128,8 +128,12 @@ async function handleRequest(request) {
         return sendNotifications();
     } else if (pathname.startsWith('/@notify')) {
         let action = theURL.getFilteredParams('action');
+        let tag = theURL.getFilteredParams('tag');
+        if (tag.startsWith('bye')) {
+            return returnWithGit('/index.html');
+        }
         switch (action) {
-            case 'dismiss-bye-bye':
+            case 'bye-bye-dismiss':
             case 'dismiss-unregister':
                 return returnWithGit('/index.html');
             default:

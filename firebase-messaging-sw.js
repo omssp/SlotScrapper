@@ -1,6 +1,6 @@
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/8.6.0/firebase-messaging.js");
-importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.5/init.js');
+importScripts('https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.6/init.js');
 
 const messaging = firebase.messaging();
 
@@ -28,8 +28,7 @@ messaging.setBackgroundMessageHandler(function(payload) {
 self.addEventListener('notificationclick', function(event) {
     const action = event.action;
     if (!action || (action && action.indexOf('dismiss-only') == -1)) {
-        // event.waitUntil(clients.openWindow(`/@notify?action=${action}`));
-        const dataURL = `/@notify?action=${action}`;
+        const dataURL = `/@notify?action=${action}&tag=${event.notification.tag}`;
         event.waitUntil(
             clients.matchAll({ type: 'window' })
             .then(clientsArr => {
