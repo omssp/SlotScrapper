@@ -2,7 +2,7 @@ const saveToStorage = data => SLOT_STORAGE.put("subrs", data);
 const getFromStorage = () => SLOT_STORAGE.get("subrs");
 
 const redirect_url = "https://selfregistration.cowin.gov.in/";
-const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.6";
+const githubBaseURL = "https://cdn.jsdelivr.net/gh/omssp/SlotScrapper@1.7";
 
 const NotifyOptions = {
     method: 'POST',
@@ -25,6 +25,7 @@ addEventListener('scheduled', event => {
         sendNotifications()
     )
 });
+
 
 URL.prototype.getFilteredParams = function(param) {
     let res = this.searchParams.get(param);
@@ -335,17 +336,17 @@ async function sendNotifications() {
     let notifyResponses = [];
 
     for (const [pinCode, tokens] of Object.entries(pinCodes)) {
-        console.log(pinCode, tokens);
+        // console.log(pinCode, tokens);
 
         let dateObj = new Date((new Date()).toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" }));
         let todaysDate = dateObj.toJSON().slice(0, 10).split('-').reverse().join('-');
-        let apiURL = `http://ec2-13-235-95-228.ap-south-1.compute.amazonaws.com/proxy.php?u=https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`;
+        let apiURL = `${PROXY_URL}https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`;
 
         let totalSlotsCount = 0;
         let msgBody = `Hurry Up; Book Fast\n\n`;
 
         let response = await (await fetch(apiURL)).text();
-        // console.log(apiURL, response)
+        console.log(apiURL, response)
         if (response.startsWith('{')) {
             response = JSON.parse(response);
 
