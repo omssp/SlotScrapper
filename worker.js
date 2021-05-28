@@ -343,7 +343,7 @@ async function sendNotifications() {
         let apiURL = `${PROXY_URL}https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=${pinCode}&date=${todaysDate}`;
 
         let totalSlotsCount = 0;
-        let msgBody = `Hurry Up; Book Fast\n\n`;
+        let msgBody = '';
 
         let response = await (await fetch(apiURL)).text();
         console.log(apiURL, response)
@@ -395,7 +395,7 @@ async function sendNotifications() {
         }
         // console.log(msgBody);
         if (
-            msgBody.length > 25 &&
+            msgBody.length > 5 &&
             (
                 totalSlotsCount > 0 ||
                 (
@@ -409,9 +409,9 @@ async function sendNotifications() {
                 )
             )
         ) {
+            msgBody = `Hurry Up; Book Fast\n\n${msgBody.trim('\n').split('\n').sort().reverse().join('\n')}\n\nTake Care`;
             let options = NotifyOptions;
             let title = `${totalSlotsCount} Slots Opened at ${pinCode} \u{1f44b}`;
-            msgBody += `\nTake Care`;
             if (!totalSlotsCount) {
                 title = `Summary of slots available at ${pinCode} \u{1f614}`;
                 msgBody = msgBody.substr(21);
